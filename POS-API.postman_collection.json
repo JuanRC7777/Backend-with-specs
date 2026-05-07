@@ -1,0 +1,447 @@
+{
+	"info": {
+		"_postman_id": "pos-api-collection-2026",
+		"name": "POS API - Sistema Point of Sale",
+		"description": "Colección completa para probar el Sistema POS con autenticación JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Autenticación",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.token);",
+									"    pm.test(\"Login exitoso\", function () {",
+									"        pm.expect(jsonData.token).to.exist;",
+									"        pm.expect(jsonData.username).to.eql(\"admin\");",
+									"    });",
+									"    console.log(\"✅ Token guardado: \" + jsonData.token.substring(0, 50) + \"...\");",
+									"} else {",
+									"    pm.test(\"Login fallido\", function () {",
+									"        pm.expect.fail(\"Error en login\");",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Autenticación de usuario y obtención de token JWT"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Productos",
+			"item": [
+				{
+					"name": "Crear Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"producto_id\", jsonData.id);",
+									"    pm.test(\"Producto creado exitosamente\", function () {",
+									"        pm.expect(jsonData.id).to.exist;",
+									"        pm.expect(jsonData.nombre).to.exist;",
+									"        pm.expect(jsonData.precio).to.be.a('number');",
+									"        pm.expect(jsonData.stock).to.be.a('number');",
+									"    });",
+									"    console.log(\"✅ Producto ID guardado: \" + jsonData.id);",
+									"    console.log(\"   Nombre: \" + jsonData.nombre);",
+									"    console.log(\"   Precio: $\" + jsonData.precio);",
+									"    console.log(\"   Stock: \" + jsonData.stock);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Laptop Dell Inspiron 15\",\n  \"descripcion\": \"Laptop Dell con procesador Intel Core i7, 16GB RAM, 512GB SSD\",\n  \"precio\": 15000.00,\n  \"stock\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/productos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"productos"
+							]
+						},
+						"description": "Crear un nuevo producto en el inventario"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Productos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Respuesta es un array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Productos tienen estructura correcta\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('id');",
+									"        pm.expect(jsonData[0]).to.have.property('nombre');",
+									"        pm.expect(jsonData[0]).to.have.property('precio');",
+									"        pm.expect(jsonData[0]).to.have.property('stock');",
+									"        pm.expect(jsonData[0]).to.have.property('activo');",
+									"    }",
+									"    console.log(\"✅ Total de productos: \" + jsonData.length);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/productos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"productos"
+							]
+						},
+						"description": "Listar todos los productos activos"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Producto por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Producto encontrado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.eql(parseInt(pm.environment.get(\"producto_id\")));",
+									"    console.log(\"✅ Producto: \" + jsonData.nombre);",
+									"    console.log(\"   Stock actual: \" + jsonData.stock);",
+									"    console.log(\"   Precio: $\" + jsonData.precio);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/productos/{{producto_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"productos",
+								"{{producto_id}}"
+							]
+						},
+						"description": "Obtener detalles de un producto específico"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Producto actualizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.nombre).to.eql(\"Laptop Dell XPS 15\");",
+									"    pm.expect(jsonData.precio).to.eql(18000.00);",
+									"    console.log(\"✅ Producto actualizado exitosamente\");",
+									"    console.log(\"   Nuevo nombre: \" + jsonData.nombre);",
+									"    console.log(\"   Nuevo precio: $\" + jsonData.precio);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Laptop Dell XPS 15\",\n  \"descripcion\": \"Laptop Dell XPS con pantalla 4K, Intel Core i9, 32GB RAM, 1TB SSD\",\n  \"precio\": 18000.00,\n  \"stock\": 8\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/productos/{{producto_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"productos",
+								"{{producto_id}}"
+							]
+						},
+						"description": "Actualizar información de un producto existente"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Producto eliminado\", function () {",
+									"    pm.response.to.have.status(204);",
+									"    console.log(\"✅ Producto eliminado exitosamente\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/productos/{{producto_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"productos",
+								"{{producto_id}}"
+							]
+						},
+						"description": "Eliminar (desactivar) un producto"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ventas",
+			"item": [
+				{
+					"name": "Registrar Venta",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"venta_id\", jsonData.id);",
+									"    pm.test(\"Venta registrada exitosamente\", function () {",
+									"        pm.expect(jsonData.id).to.exist;",
+									"        pm.expect(jsonData.total).to.exist;",
+									"        pm.expect(jsonData.detalles).to.be.an('array');",
+									"    });",
+									"    console.log(\"✅ Venta ID guardado: \" + jsonData.id);",
+									"    console.log(\"   Total: $\" + jsonData.total);",
+									"    console.log(\"   Items: \" + jsonData.detalles.length);",
+									"    console.log(\"   Usuario: \" + jsonData.usuarioNombre);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var productoId = pm.environment.get(\"producto_id\");",
+									"if (!productoId) {",
+									"    console.error(\"⚠️ producto_id no está definido. Ejecuta 'Crear Producto' primero.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"productoId\": {{producto_id}},\n      \"cantidad\": 2\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ventas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ventas"
+							]
+						},
+						"description": "Registrar una nueva venta con uno o más productos. El usuario se obtiene automáticamente del token JWT."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Ventas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ventas listadas correctamente\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('id');",
+									"        pm.expect(jsonData[0]).to.have.property('total');",
+									"        pm.expect(jsonData[0]).to.have.property('fecha');",
+									"        pm.expect(jsonData[0]).to.have.property('detalles');",
+									"    }",
+									"    console.log(\"✅ Total de ventas: \" + jsonData.length);",
+									"    ",
+									"    var totalVentas = 0;",
+									"    jsonData.forEach(function(venta) {",
+									"        totalVentas += venta.total;",
+									"    });",
+									"    console.log(\"   Total vendido: $\" + totalVentas.toFixed(2));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/ventas",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"ventas"
+							]
+						},
+						"description": "Listar todas las ventas registradas"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081",
+			"type": "string"
+		}
+	]
+}
