@@ -26,6 +26,11 @@ public class ProductoRepositoryAdapter implements ProductoRepositoryPort {
     }
 
     @Override
+    public Optional<Producto> findByIdForUpdate(Long id) {
+        return jpaRepository.findByIdForUpdate(id).map(mapper::toDomain);
+    }
+
+    @Override
     public List<Producto> findAllActivos() {
         return jpaRepository.findAllByActivoTrue().stream()
                 .map(mapper::toDomain)

@@ -1,7 +1,7 @@
 package com.empresa.pos.infrastructure.adapter.in.web;
 
-import com.empresa.pos.domain.exception.RecursoNoEncontradoException;
-import com.empresa.pos.domain.exception.StockInsuficienteException;
+import com.empresa.pos.domain.exception.*;
+import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,6 +14,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Manejador global de excepciones con formato de error consistente.
+ *
+ * @version 3.2.0
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -27,9 +32,34 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(FacturaDuplicadaException.class)
+    public ResponseEntity<Map<String, Object>> handleFacturaDuplicada(FacturaDuplicadaException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(PagosInvalidosException.class)
+    public ResponseEntity<Map<String, Object>> handlePagosInvalidos(PagosInvalidosException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(VentaYaReembolsadaException.class)
+    public ResponseEntity<Map<String, Object>> handleVentaYaReembolsada(VentaYaReembolsadaException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(LimiteFacturasDiarioExcedidoException.class)
+    public ResponseEntity<Map<String, Object>> handleLimiteFacturas(LimiteFacturasDiarioExcedidoException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(ValidationException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

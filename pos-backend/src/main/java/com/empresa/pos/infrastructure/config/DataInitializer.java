@@ -11,25 +11,34 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class DataInitializer {
 
     @Bean
-    CommandLineRunner initDatabase(JpaUsuarioRepository usuarioRepository, 
+    CommandLineRunner initDatabase(JpaUsuarioRepository usuarioRepository,
                                    PasswordEncoder passwordEncoder) {
         return args -> {
-            // Eliminar usuario admin si existe (para recrearlo con el hash correcto)
-            usuarioRepository.findByUsername("admin").ifPresent(usuarioRepository::delete);
-            
-            // Crear usuario admin
-            UsuarioEntity admin = UsuarioEntity.builder()
-                    .username("admin")
-                    .password(passwordEncoder.encode("admin123"))
-                    .nombre("Administrador")
-                    .rol("ADMIN")
-                    .activo(true)
-                    .build();
-            
-            usuarioRepository.save(admin);
-            System.out.println("✅ Usuario admin creado exitosamente");
-            System.out.println("   Username: admin");
-            System.out.println("   Password: admin123");
+            var adminOpt = usuarioRepository.findByUsername("admin");
+
+            if (adminOpt.isEmpty()) {
+                // Crear usuario admin por primera vez
+                UsuarioEntity admin = UsuarioEntity.builder()
+                        .username("admin")
+                        .password(passwordEncoder.encode("admin123"))
+                        .nombre("Administrador")
+                        .rol("ADMIN")
+                        .activo(true)
+                        .build();
+                usuarioRepository.save(admin);
+                System.out.println("✅ Usuario admin creado exitosamente");
+            } else {
+                // Actualizar password con BCrypt fresco (por si venía de data.sql con hash fijo)
+                UsuarioEntity admin = adminOpt.get();
+                if (!passwordEncoder.matches("admin123", admin.getPassword())) {
+                    admin.setPassword(passwordEncoder.encode("admin123"));
+                    usuarioRepository.save(admin);
+                    System.out.println("✅ Password de admin actualizado con BCrypt");
+                } else {
+                    System.out.println("ℹ️  Usuario admin ya existe y password es válido");
+                }
+            }
+            System.out.println("   Username: admin  |  Password: admin123");
         };
     }
 }

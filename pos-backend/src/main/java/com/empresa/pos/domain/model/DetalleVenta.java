@@ -1,7 +1,14 @@
 package com.empresa.pos.domain.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
+/**
+ * Entidad de dominio que representa una línea de detalle en una venta.
+ * Calcula el subtotal aplicando redondeo ROUND_HALF_UP a 2 decimales.
+ * 
+ * @version 3.2.0
+ */
 public class DetalleVenta {
     private Long id;
     private Producto producto;
@@ -18,8 +25,16 @@ public class DetalleVenta {
         this.subtotal = calcularSubtotal();
     }
 
+    /**
+     * Calcula el subtotal de la línea como precio × cantidad.
+     * Aplica redondeo ROUND_HALF_UP a 2 decimales según RF-04.1 y RF-04.7.
+     * 
+     * @return Subtotal redondeado a 2 decimales
+     */
     public BigDecimal calcularSubtotal() {
-        return precioUnit.multiply(BigDecimal.valueOf(cantidad));
+        return precioUnit
+            .multiply(BigDecimal.valueOf(cantidad))
+            .setScale(2, RoundingMode.HALF_UP);
     }
 
     // Getters y Setters

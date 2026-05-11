@@ -29,4 +29,18 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
             return usuario;
         });
     }
+
+    @Override
+    public Optional<Usuario> findById(Long id) {
+        return jpaRepository.findById(id).map(entity -> {
+            Usuario usuario = new Usuario();
+            usuario.setId(entity.getId());
+            usuario.setUsername(entity.getUsername());
+            usuario.setPassword(entity.getPassword());
+            usuario.setNombre(entity.getNombre());
+            usuario.setRol(entity.getRol());
+            usuario.setActivo(entity.isActivo());
+            return usuario;
+        });
+    }
 }

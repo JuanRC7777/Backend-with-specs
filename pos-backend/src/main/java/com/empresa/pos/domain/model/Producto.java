@@ -32,6 +32,19 @@ public class Producto {
         this.stock -= cantidad;
     }
 
+    /**
+     * Incrementa el stock del producto.
+     * Usado principalmente para reembolsos de ventas.
+     * 
+     * @param cantidad Cantidad a incrementar
+     */
+    public void incrementarStock(int cantidad) {
+        if (cantidad < 0) {
+            throw new IllegalArgumentException("La cantidad a incrementar no puede ser negativa");
+        }
+        this.stock += cantidad;
+    }
+
     // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
